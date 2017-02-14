@@ -26,6 +26,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.TileOverlay;
@@ -52,7 +53,7 @@ public class HeatmapsDemoActivity extends BaseDemoActivity {
     /**
      * Alternative radius for convolution
      */
-    private static final int ALT_HEATMAP_RADIUS = 10;
+    private static final int ALT_HEATMAP_RADIUS = 80;
 
     /**
      * Alternative opacity of heatmap overlay
@@ -100,6 +101,9 @@ public class HeatmapsDemoActivity extends BaseDemoActivity {
     protected void startDemo() {
         getMap().moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(-25, 143), 4));
 
+
+//        getMap().moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(53.4452419,-7.7439172), 4));
+
         // Set up the spinner/dropdown list
         Spinner spinner = (Spinner) findViewById(R.id.spinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
@@ -109,10 +113,27 @@ public class HeatmapsDemoActivity extends BaseDemoActivity {
         spinner.setOnItemSelectedListener(new SpinnerActivity());
 
         try {
-            mLists.put(getString(R.string.police_stations), new DataSet(readItems(R.raw.police),
-                    getString(R.string.police_stations_url)));
-            mLists.put(getString(R.string.medicare), new DataSet(readItems(R.raw.medicare),
-                    getString(R.string.medicare_url)));
+            mLists.put(getString(R.string.police_stations),
+                    new DataSet(readItems(R.raw.police),
+                            getString(R.string.police_stations_url)));
+
+            mLists.put(getString(R.string.medicare),
+                    new DataSet(readItems(R.raw.medicare),
+                            getString(R.string.medicare_url)));
+
+            mLists.put(getString(R.string.age25),
+                    new DataSet(readItems(R.raw.aged25),
+                            "dummyAgedUrl"));
+
+            mLists.put(getString(R.string.primary_school),
+                    new DataSet(readItems(R.raw.primary_school),
+                            "dummyPrimarySchoolUrl"));
+
+            mLists.put(getString(R.string.irelandHeatmap),
+                    new DataSet(readItems(R.raw.irelandheatmap),
+                            "dummyIrelandHeatmap"));
+
+
         } catch (JSONException e) {
             Toast.makeText(this, "Problem reading list of markers.", Toast.LENGTH_LONG).show();
         }
@@ -151,6 +172,10 @@ public class HeatmapsDemoActivity extends BaseDemoActivity {
         }
         mOverlay.clearTileCache();
         mDefaultOpacity = !mDefaultOpacity;
+    }
+
+    public void searchMe(View view) {
+        showHeatmap();
     }
 
     // Dealing with spinner choices
@@ -217,6 +242,26 @@ public class HeatmapsDemoActivity extends BaseDemoActivity {
         public String getUrl() {
             return mUrl;
         }
+    }
+
+    public void showHeatmap() {
+        TextView attribution = ((TextView) findViewById(R.id.attribution));
+
+        mProvider.setRadius(120);
+        mProvider.setData(mLists.get(getString(R.string.irelandHeatmap)).getData());
+        mOverlay.clearTileCache();
+        getMap().getUiSettings().setZoomControlsEnabled(true);
+
+        CameraUpdate center =
+                CameraUpdateFactory.newLatLng(mLists.get(getString(R.string.irelandHeatmap)).getData().get(0));
+        CameraUpdate zoom = CameraUpdateFactory.zoomTo(7);
+
+        getMap().moveCamera(center);
+        getMap().animateCamera(zoom);
+
+
+        attribution.setText(Html.fromHtml(String.format(getString(R.string.attrib_format),
+                mLists.get(getString(R.string.irelandHeatmap)).getUrl())));
     }
 
 }
